@@ -1,1 +1,2 @@
-# PowerShell educational scripts
+# PowerShell 
+educational scripts
