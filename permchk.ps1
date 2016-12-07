@@ -22,7 +22,7 @@ for($i=0; $i -le $arpath.count-1; $i++)
 		{
 			Write-Host " [+] Writable path:" $arpath[$i]
 			$removefile = $arpath[$i]+"\"+$file
-            Remove-Item $removefile
+            		Remove-Item $removefile
 		}
 		# unsuccessful copy
 		else
