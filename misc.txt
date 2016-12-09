@@ -15,7 +15,7 @@ icacls "pathname"           Get-Acl -path "pathname" | Format-List AccessToStrin
 
 # unquoted paths {cli command written by Danial Compton (@commonexploits)}
 wmic service get name, displayname, pathname, startmode | findstr /i "Auto" | findstr /i /v "C:\Windows\\" | findstr /i /v """
-Get-WmiObject -class Win32_Service | Where-Object {$_.StartMode -eq "Auto" -and $_.pathname -notlike "C:\Windows\*" -and $_pathname -notlike ""} | Format-Table Name, Pathname, Displayname
+Get-WmiObject -class Win32_Service | Where-Object {$_.StartMode -eq "Auto" -and $_.pathname -notlike "C:\Windows\*" -and $_.pathname -notlike ""} | Format-Table Name, Pathname, Displayname
 
 # start a service
 sc start <service name>     Start-Service -Name <service name>
