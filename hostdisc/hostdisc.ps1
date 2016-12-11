@@ -49,9 +49,12 @@ for($i=0; $i -le 3; $i++)
 
 $end = [convert]::toint32($lastnetip.substring(24,8),2)     # last ip to ping
 
+$a = New-Object System.Net.NetworkInformation.Ping
+$c = New-Object System.Net.NetworkInformation.PingOptions
+
 for($i=$start; $i -le $end; $i++)
 {
-	if (Test-Connection -Computername $netip$i -count 1 -quiet)
+	if (($a.Send($netip+$i, 100, "0", $c)).Status -eq "Success")
 	{
 		Write-Host " [+] Host:" $netip$i " is up"
 	}
