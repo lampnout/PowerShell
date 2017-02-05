@@ -26,7 +26,7 @@ Function Scan-ARP2 {
 		
 		# lowlimit has the network address
 		for ($i=1; $i -lt $dif; $i++) {
-			$temp = 168430179 + $i
+			$temp = $lowlimit + $i
 
 			$macAddr = New-Object byte[] 6
 			$macLen = $macAddr.Length
