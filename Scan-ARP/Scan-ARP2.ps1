@@ -5,48 +5,54 @@ Function Scan-ARP2 {
 	)
 	
 	$signature=@"
-		[DllImport("iphlpapi.dll", ExactSpelling=true)]
-		public static extern int SendARP( int destIp, int srcIP, byte[] macAddr, ref uint physicalAddrLen );
+	[DllImport("iphlpapi.dll", ExactSpelling=true)]
+	public static extern int SendARP( int destIp, int srcIP, byte[] macAddr, ref uint physicalAddrLen );
 "@
 
 	$sendarp = Add-Type -memberDefinition $signature -name "Win32SendARP" -namespace Win32Functions -passThru
-	
-	#$dst = [Net.IPAddress]::Parse($dst)
-	$macAddr = New-Object byte[] 6
-	$macLen = $macAddr.Length
-	
+
+	# split IP and SubnetMask
 	$spl = $ipcidr -split '\/'
 	
 	if ( $spl[1] ) {
-		# cidr
-		Write-Host "Network "$(Get-SubnetInfo $ipcidr).network" Broadcast "$(Get-SubnetInfo $ipcidr).broadcast
+
+		# cidr (ip+subnetmask)
 
 		$lowlimit = Convert-IPToUInt $($(Get-SubnetInfo $ipcidr).network)
 		$upperlimit = Convert-IPToUInt $($(Get-SubnetInfo $ipcidr).broadcast)
 		
 		[uint64]$dif = $upperlimit - $lowlimit
-		#Write-Host "Host: "$dif"  |  "[uint64]$upperlimit"   |   "[uint64]$lowlimit
-		#Write-Host "Host: "$dif"  |  "$upperlimit"   |   "$lowlimit
+		[int]$count = 0
 		
 		# lowlimit has the network address
 		for ($i=1; $i -lt $dif; $i++) {
-			$temp = $lowlimit + $i
+			$temp = 168430179 + $i
 
+			$macAddr = New-Object byte[] 6
+			$macLen = $macAddr.Length
+			
 			$ip = [Net.IPAddress]::Parse($(Convert-UIntToIP $temp))
 				
 			if ($sendarp::SendARP([BitConverter]::ToInt32($ip.GetAddressBytes(), 0), 0, $macAddr, [ref]$macLen) -eq 0) {
 				$macA = ($macAddr | Foreach {"{0:X2}" -f $_}) -join ":"
-				Write-Host $i"    "$ip"    "$macA
+				Write-Host $ip"    "$macA
+				$count++
 			}
-			else {
-				Write-Host "No host for ip "$ip
-			}
+			#else {
+				#Write-Host "No host for ip "$ip
+			#}
 		}
+		Write-Host $count " packets received"
 	}
 	else {
-		# ip only		
+
+		# ip only
+
+		$macAddr = New-Object byte[] 6
+		$macLen = $macAddr.length
+
 		$ip = [Net.IPAddress]::Parse($($spl[0]))
-		
+						
 		if ($sendarp::SendARP([BitConverter]::ToInt32($ip.GetAddressBytes(), 0), 0, $macAddr, [ref]$macLen) -eq 0) {
 				$macA = ($macAddr | Foreach {"{0:X2}" -f $_}) -join ":"
 				Write-Host $i"    "$ip"    "$macA
@@ -59,7 +65,7 @@ Function Scan-ARP2 {
 
 Function Convert-UIntToIP {
 
-	# 3232235777 -> 192.168.1.1
+	# converts uint to ip. example: 3232235777 -> 192.168.1.1
 	Param(
 		[uint64]$number
 	)
@@ -72,7 +78,7 @@ Function Convert-UIntToIP {
 
 Function Convert-IPToUInt {
 	
-	# 192.168.1.1 -> 3232235777
+	# converts ip to uint. example: 192.168.1.1 -> 3232235777
 	Param(
 		[string]$ip
 	)
@@ -85,7 +91,7 @@ Function Convert-IPToUInt {
 
 Function Convert-UIntToBinStr {
 
-	# 3232235777 -> 11000000101010000000000100000001
+	# converts uint to 32-bit binary string. example: 3232235777 -> 11000000101010000000000100000001
 	Param(
 		[uint64]$number
 	)
@@ -98,7 +104,7 @@ Function Convert-UIntToBinStr {
 
 Function Convert-BinStrToUInt {
 
-	# 11000000101010000000000100000001 -> 3232235777
+	# converts 32-bit binary string to uint. example: 11000000101010000000000100000001 -> 3232235777
 	Param(
 		[string]$str
 	)
@@ -111,7 +117,7 @@ Function Convert-BinStrToUInt {
 
 Function Convert-BinStrToIP {
 	
-	# 11000000101010000000000100000001 -> 192.168.1.1
+	# converts 32-bit binary string to ip. example: 11000000101010000000000100000001 -> 192.168.1.1
 	Param(
 		[string]$binip
 	)
@@ -124,7 +130,7 @@ Function Convert-BinStrToIP {
 
 Function Convert-IPToBinStr {
 	
-	# 192.168.1.1 -> 11000000101010000000000100000001
+	# converts ip to 32-bit binary string. example: 192.168.1.1 -> 11000000101010000000000100000001
 	Param(
 		[string]$ip
 	)
